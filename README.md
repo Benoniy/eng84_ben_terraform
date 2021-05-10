@@ -24,4 +24,27 @@ AMI id's:
 * db - `ami-094805cb688e716e3`  
 
 
-### Something else
+1. Connect to AWS in main.tf:
+   ```
+   # Use the keyword "provider" to define what cloud service we will use:
+   provider "aws" {
+       region = "eu-west-1"
+   }
+   ```
+
+
+2. Start and instance in the same file:  
+   ```
+   resource "aws_instance" "terraform_app" {
+       ami = "ami-0e54d0fc3adbf4d11"
+       instance_type = "t2.micro"
+       associate_public_ip_address = true
+       subnet_id = "subnet-0b96bde6482352562"
+       security_groups = ["sg-00aa81fddf8fca6bc"]
+       key_name = "eng84devops"
+   
+       tags = {
+           Name = "eng84_ben_terraform_app"
+       }
+   }
+   ```
