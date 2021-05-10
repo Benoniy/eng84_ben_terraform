@@ -8,6 +8,7 @@ provider "aws" {
     region = "eu-west-1"
 }
 
+
 # Creating a vpc
 resource "aws_vpc" "eng84_ben_terraform_vpc"{
     cidr_block = "13.37.0.0/16"
@@ -27,8 +28,9 @@ resource "aws_internet_gateway" "eng84_ben_terraform_igw" {
   }
 }
 
+
 # Edit the main route table
-resource "aws_default_route_table" "eng84_ben_terraform_rt" {
+resource "aws_default_route_table" "eng84_ben_terraform_rt_pub" {
   default_route_table_id = aws_vpc.eng84_ben_terraform_vpc.default_route_table_id
 
   route {
@@ -37,31 +39,50 @@ resource "aws_default_route_table" "eng84_ben_terraform_rt" {
   }
 
   tags = {
-    Name = "eng84_ben_terraform_rt"
+    Name = "eng84_ben_terraform_rt_pub"
+  }
+}
+# Create Private route table
+resource "aws_route_table" "eng84_ben_terraform_rt_priv" {
+  vpc_id = aws_vpc.eng84_ben_terraform_vpc.id
+
+  tags = {
+    Name = "eng84_ben_terraform_rt_priv"
   }
 }
 
-# Creating a subnet for out vpc
+
+# Creating a few public for out vpc
 resource "aws_subnet" "eng84_ben_terraform_public_subnet"{
     vpc_id = aws_vpc.eng84_ben_terraform_vpc.id
     cidr_block = "13.37.1.0/24"
-
-
     tags = {
         Name = "eng84_ben_terraform_public_subnet"
     }
 }
-
-# Associate route table with subnet
-resource "aws_route_table_association" "a" {
-  subnet_id = aws_subnet.eng84_ben_terraform_public_subnet.id
-  route_table_id = aws_route_table.eng84_ben_terraform_rt.id
+resource "aws_subnet" "eng84_ben_terraform_private_subnet"{
+    vpc_id = aws_vpc.eng84_ben_terraform_vpc.id
+    cidr_block = "13.37.2.0/24"
+    tags = {
+        Name = "eng84_ben_terraform_private_subnet"
+    }
 }
+
+
+# Associate route tables with subnets
+resource "aws_route_table_association" "a1" {
+  subnet_id = aws_subnet.eng84_ben_terraform_public_subnet.id
+  route_table_id = aws_vpc.eng84_ben_terraform_vpc.default_route_table_id
+}
+resource "aws_route_table_association" "a2" {
+  subnet_id = aws_subnet.eng84_ben_terraform_private_subnet.id
+  route_table_id = aws_route_table.eng84_ben_terraform_rt_priv.id
+}
+
 
 # Launching an EC2 using our app ami
 # The resource keyword is used to create instances
 # Resource type followed by name
-
 resource "aws_instance" "terraform_app" {
     ami = "ami-0e54d0fc3adbf4d11"
     instance_type = "t2.micro"
@@ -71,5 +92,16 @@ resource "aws_instance" "terraform_app" {
 
     tags = {
         Name = "eng84_ben_terraform_app"
+    }
+}
+resource "aws_instance" "terraform_db" {
+    ami = "ami-094805cb688e716e3"
+    instance_type = "t2.micro"
+    associate_public_ip_address = true
+    key_name = "eng84devops"
+    subnet_id = aws_subnet.eng84_ben_terraform_private_subnet.id
+
+    tags = {
+        Name = "eng84_ben_terraform_db"
     }
 }
