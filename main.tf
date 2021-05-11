@@ -51,7 +51,7 @@ resource "aws_route_table" "terraform_rt_priv" {
 
 
 
-# Creating a few public for out vpc
+# Creating a few subnets for out vpc
 resource "aws_subnet" "terraform_public_subnet"{
     vpc_id = aws_vpc.terraform_vpc.id
     cidr_block = var.pub_cidr
@@ -151,29 +151,48 @@ resource "aws_security_group_rule" "priv_vpc_access" {
 # Launching an EC2 using our app ami
 # The resource keyword is used to create instances
 # Resource type followed by name
-resource "aws_instance" "terraform_webapp" {
-    ami = var.app_ami
-    instance_type = "t2.micro"
-    associate_public_ip_address = true
-    key_name = var.key
-    subnet_id = aws_subnet.terraform_public_subnet.id
-    private_ip = var.webapp_ip
-    security_groups = [aws_security_group.pub_sec_group.id]
-
-    tags = {
-        Name = var.webapp_name
-    }
-}
 resource "aws_instance" "terraform_db" {
-    ami =  var.db_ami
-    instance_type = "t2.micro"
-    associate_public_ip_address = true
-    key_name = var.key
-    subnet_id = aws_subnet.terraform_private_subnet.id
-    private_ip = var.db_ip
-    security_groups = [aws_security_group.priv_sec_group.id]
+  ami =  var.db_ami
+  instance_type = "t2.micro"
+  associate_public_ip_address = true
+  key_name = var.key
+  subnet_id = aws_subnet.terraform_private_subnet.id
+  private_ip = var.db_ip
+  vpc_security_group_ids = [aws_security_group.priv_sec_group.id]
 
-    tags = {
-        Name = var.db_name
-    }
+  tags = {
+      Name = var.db_name
+  }
+}
+resource "aws_instance" "terraform_webapp" {
+  ami = var.app_ami
+  instance_type = "t2.micro"
+  associate_public_ip_address = true
+  key_name = var.key
+  subnet_id = aws_subnet.terraform_public_subnet.id
+  private_ip = var.webapp_ip
+  vpc_security_group_ids = [aws_security_group.pub_sec_group.id]
+  tags = {
+      Name = var.webapp_name
+  }
+
+  provisioner "file" {
+    source      = "./scripts/app/seed_db.sh"
+    destination = "/tmp/seed_db.sh"
+  }
+
+  # Change permissions on bash script and execute.
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/seed_db.sh",
+      "sudo /tmp/seed_db.sh",
+    ]
+  }
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file(var.key_path)
+    host        = self.public_ip
+  }
 }

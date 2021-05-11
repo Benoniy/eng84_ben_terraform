@@ -87,3 +87,7 @@ variable "db_ami" {
 variable "key"{
   default = "eng84devops"
 }
+
+variable "key_path"{
+  default = "C:/Users/Ben/.ssh/eng84devops.pem"
+}

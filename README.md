@@ -302,7 +302,7 @@ resource "aws_route_table_association" "a2" {
        key_name = var.key
        subnet_id = aws_subnet.terraform_private_subnet.id
        private_ip = var.db_ip
-       security_groups = [aws_security_group.priv_sec_group.id]
+       vpc_security_group_ids = [aws_security_group.priv_sec_group.id]
    
        tags = {
            Name = var.db_name
