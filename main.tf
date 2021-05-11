@@ -82,7 +82,7 @@ resource "aws_route_table_association" "a2" {
 
 
 # Create security groups
-resource "aws_security_group" "public_sec_group" {
+resource "aws_security_group" "pub_sec_group" {
   name = var.pub_sec_name
   description = "Public security group"
   vpc_id = aws_vpc.terraform_vpc.id
@@ -107,7 +107,7 @@ resource "aws_security_group_rule" "my_ssh" {
   to_port           = 22
   protocol          = "tcp"
   cidr_blocks       = [var.my_ip]
-  security_group_id = aws_security_group.public_sec_group.id
+  security_group_id = aws_security_group.pub_sec_group.id
 }
 resource "aws_security_group_rule" "vpc_access" {
   type              = "ingress"
@@ -115,7 +115,7 @@ resource "aws_security_group_rule" "vpc_access" {
   to_port           = 0
   protocol          = "-1"
   cidr_blocks       = [var.vpc_cidr]
-  security_group_id = aws_security_group.public_sec_group.id
+  security_group_id = aws_security_group.pub_sec_group.id
 }
 
 resource "aws_security_group" "priv_sec_group" {
@@ -158,7 +158,7 @@ resource "aws_instance" "terraform_webapp" {
     key_name = var.key
     subnet_id = aws_subnet.terraform_public_subnet.id
     private_ip = var.webapp_ip
-    security_groups = [aws_security_group.public_sec_group.id]
+    security_groups = [aws_security_group.pub_sec_group.id]
 
     tags = {
         Name = var.webapp_name

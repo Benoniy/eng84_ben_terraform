@@ -28,7 +28,7 @@ variable "pub_sec_name"{
 }
 
 variable "priv_sec_name"{
-  default = "eng84_ben_terraform_pub_sec"
+  default = "eng84_ben_terraform_priv_sec"
 }
 
 variable "webapp_name"{
