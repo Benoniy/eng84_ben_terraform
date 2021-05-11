@@ -185,7 +185,7 @@ resource "aws_instance" "terraform_webapp" {
   provisioner "remote-exec" {
     inline = [
       "chmod +x /tmp/seed_db.sh",
-      "sudo /tmp/seed_db.sh",
+      "bash /tmp/seed_db.sh",
     ]
   }
 
@@ -195,4 +195,6 @@ resource "aws_instance" "terraform_webapp" {
     private_key = file(var.key_path)
     host        = self.public_ip
   }
+
+  depends_on = [aws_instance.terraform_db]  # db MUST exist before App
 }
